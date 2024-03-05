@@ -32,66 +32,36 @@ def stack_network():
     return network_info
 
 
-# функция извлекающая сетевой стек
-def stack_network_inside1():
-    network_info = dict()
-    net_info = OpenKeyEx(HKEY_LOCAL_MACHINE, r'SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\{'
-                                             r'e783fbfe-2a7e-417a-be12-a6d7bc94d6c2}')
-    network_info.update({'DhcpDefaultGateway': QueryValueEx(net_info, 'DhcpDefaultGateway')[0]})
-    network_info.update({'DhcpDomain': QueryValueEx(net_info, 'DhcpDomain')[0]})
-    network_info.update({'DhcpIPAddress': QueryValueEx(net_info, 'DhcpIPAddress')[0]})
-    network_info.update({'DhcpSubnetMask': QueryValueEx(net_info, 'DhcpSubnetMask')[0]})
-    lease_obtained_time_bin = QueryValueEx(net_info, 'LeaseObtainedTime')[0]
-    network_info.update(
-        {'leaseObtainedTime': time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(float(lease_obtained_time_bin)))})
+def net_all_interfaces():
+    """
+    функция извлекающая сетевой стек
 
-    return network_info
+    """
+    path_reg = OpenKeyEx(HKEY_LOCAL_MACHINE, r'SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces')
+    key_list = list()
+    sub_key_dict = dict()
 
+    for i in range(QueryInfoKey(path_reg)[0]):
+        value_dict = dict()
+        subkeynames = EnumKey(path_reg, i)
+        path_test = OpenKeyEx(HKEY_LOCAL_MACHINE,
+                              f'SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{subkeynames}')
+        key_list.append(QueryInfoKey(path_test)[1])
+        try:
+            if QueryValueEx(path_test, 'DhcpIPAddress')[0] is not None:
+                value_dict.update({'DhcpIPAddress': QueryValueEx(path_test, 'DhcpIPAddress')[0]})
+                # value_dict.update({'DhcpDomain': QueryValueEx(path_test, 'DhcpDomain')[0]})
+                value_dict.update({'DhcpSubnetMask': QueryValueEx(path_test, 'DhcpSubnetMask')[0]})
+                lease_obtained_time_bin = QueryValueEx(path_test, 'LeaseObtainedTime')[0]
+                value_dict.update({'leaseObtainedTime': time.strftime('%Y-%m-%d %H:%M:%S',
+                                                                      time.gmtime(float(lease_obtained_time_bin)))})
+                sub_key_dict.update({subkeynames: value_dict})
+        except FileNotFoundError:
+            pass
+            # sub_key_dict.update(
+            #    {subkeynames: value_dict.update({EnumValue(path_test, i1)[0]: ''})})
 
-# функция извлекающая сетевой стек
-def stack_network_inside2():
-    network_info = dict()
-    net_info = OpenKeyEx(HKEY_LOCAL_MACHINE, r'SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\{'
-                                             r'e783fbfe-2a7e-417a-be12-a6d7bc94d6c2}\14C6E4163747')
-    network_info.update({'DhcpDefaultGateway': QueryValueEx(net_info, 'DhcpDefaultGateway')[0]})
-    network_info.update({'DhcpIPAddress': QueryValueEx(net_info, 'DhcpIPAddress')[0]})
-    network_info.update({'DhcpSubnetMask': QueryValueEx(net_info, 'DhcpSubnetMask')[0]})
-    lease_obtained_time_bin = QueryValueEx(net_info, 'LeaseObtainedTime')[0]
-    network_info.update(
-        {'leaseObtainedTime': time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(float(lease_obtained_time_bin)))})
-
-    return network_info
-
-
-# функция извлекающая сетевой стек
-def stack_network_inside3():
-    network_info = dict()
-    net_info = OpenKeyEx(HKEY_LOCAL_MACHINE, r'SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\{'
-                                             r'f40071ba-fc7f-4fe8-8881-6d83a938dfbf}')
-    network_info.update({'DhcpDefaultGateway': QueryValueEx(net_info, 'DhcpDefaultGateway')[0]})
-    network_info.update({'DhcpIPAddress': QueryValueEx(net_info, 'DhcpIPAddress')[0]})
-    network_info.update({'DhcpSubnetMask': QueryValueEx(net_info, 'DhcpSubnetMask')[0]})
-    lease_obtained_time_bin = QueryValueEx(net_info, 'LeaseObtainedTime')[0]
-    network_info.update(
-        {'leaseObtainedTime': time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(float(lease_obtained_time_bin)))})
-
-    return network_info
-
-
-# функция извлекающая сетевой стек
-def stack_network_inside4():
-    network_info = dict()
-    net_info = OpenKeyEx(HKEY_LOCAL_MACHINE, r'SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces\{'
-                                             r'f9cb1bff-ccbf-4194-b99e-dc54bb512c68}')
-    network_info.update({'DhcpDefaultGateway': QueryValueEx(net_info, 'DhcpDefaultGateway')[0]})
-    network_info.update({'DhcpDomain': QueryValueEx(net_info, 'DhcpDomain')[0]})
-    network_info.update({'DhcpIPAddress': QueryValueEx(net_info, 'DhcpIPAddress')[0]})
-    network_info.update({'DhcpSubnetMask': QueryValueEx(net_info, 'DhcpSubnetMask')[0]})
-    lease_obtained_time_bin = QueryValueEx(net_info, 'LeaseObtainedTime')[0]
-    network_info.update(
-        {'leaseObtainedTime': time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(float(lease_obtained_time_bin)))})
-
-    return network_info
+    return sub_key_dict
 
 
 # функция извлекающая версию виндовс
@@ -183,16 +153,9 @@ def print_in_file(name_file_txt):
         file.write(f'************************************************\n')
         file.write(f'************************************************\n')
         file.write(f'сведения о сетевых подключениях:\n')
-        for key, value in stack_network().items():
-            file.write(f'{key}:{value}\n')
-        for key, value in stack_network_inside1().items():
-            file.write(f'{key}:{value}\n')
-        for key, value in stack_network_inside2().items():
-            file.write(f'{key}:{value}\n')
-        for key, value in stack_network_inside3().items():
-            file.write(f'{key}:{value}\n')
-        for key, value in stack_network_inside4().items():
-            file.write(f'{key}:{value}\n')
+        for count, value in enumerate(net_all_interfaces().values(), start=1):
+            file.write(f'{count}:{value}\n')
+
         file.write(f'************************************************\n')
         file.write(f'************************************************\n')
         file.write(f'версия windows:\n')
@@ -216,10 +179,11 @@ def main():
     a1 = user_data()
     a = winreg_os()
     b = stack_network()
-    c = stack_network_inside1()
-    e = stack_network_inside2()
-    d = stack_network_inside3()
-    f = stack_network_inside4()
+    c = net_all_interfaces()
+    # c = stack_network_inside1()
+    # e = stack_network_inside2()
+    # d = stack_network_inside3()
+    # f = stack_network_inside4()
     g = current_version()
     h = time_zone()
     i1 = comp_name()
@@ -244,10 +208,9 @@ def main():
     print('************************************************')
     print('сведения о сетевых подключениях')
     print(b, sep='\n')
-    print(c, sep='\n')
-    print(e, sep='\n')
-    print(d, sep='\n')
-    print(f, sep='\n')
+    for count, value in enumerate(c.values(), start=1):
+        print(f'{count}: {value}')
+
     print('************************************************')
     print('************************************************')
     print('версия windows')
