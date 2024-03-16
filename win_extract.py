@@ -124,6 +124,13 @@ def create_name_file(name_comp: str) -> str:
     return name_file
 
 
+def key_windows():
+    key_w = dict()
+    path_key = OpenKeyEx(HKEY_LOCAL_MACHINE, r'SOFTWARE\Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform')
+    key_w.update({'BackupProductKeyDefault': QueryValueEx(path_key, 'BackupProductKeyDefault')[0]})
+    return key_w
+
+
 # функция записи данных в файл
 def print_in_file(name_file_txt):
     with open(name_file_txt, 'w', encoding='utf-8') as file:
@@ -172,6 +179,10 @@ def print_in_file(name_file_txt):
         for key, value in soft_list().items():
             file.write(f'{key}:{value}\n')
         file.write(f'************************************************\n')
+        file.write(f'************************************************\n')
+        for key, value in key_windows().items():
+            file.write(f'{key}:{value}\n')
+        file.write(f'************************************************\n')
 
 
 def main():
@@ -189,6 +200,7 @@ def main():
     i1 = comp_name()
     i2 = soft_list()
     i3 = central_processor()
+    i4 = key_windows()
     print('************************************************')
     print('имена зарегистрированных пользователей:')
     print(a1)
@@ -223,6 +235,10 @@ def main():
     print('************************************************')
     print('установленное программное обеспечение')
     print(i2, sep='\n')
+    print('************************************************')
+    print('************************************************')
+    print(i4, sep='\n')
+    print('************************************************')
     print('************************************************')
 
 
